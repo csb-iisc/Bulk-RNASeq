@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 ############################################################################################
 ############################################################################################
@@ -12,21 +12,92 @@
 ############################################################################################
 ############################################################################################
 
-path='/path/to/indexed/genome/'
+# Input parameters
+path='/mnt/csb-seq/'
 STAR='_STARIndexed'
-echo "Organism: $1" 
-read org
-echo "Cluster Threads: $2" 
-read thr
+org='mm10'
+thr=14
+ndl=10
 
-## Mapping fastq using STAR-aligner
+# exit when any command fails
+set -e
 
+# Setting file descriptor size to 999999 & file size to unlimited
 ulimit -n 999999
 ulimit -f unlimited
 
+# Make directories if they don't exist
+for dir in {fastq,fastqc,fastqp,fastp,BAM,htseq}; do
+	[ -d $dir ] || mkdir $dir
+done
+
+cd fastq
+
+# Download fastq files if given the tsv file
+if [ -f ../filereport_read_run_*_tsv.txt ]; then
+	echo "TSV file found, attempting to download"
+	awk -F '\t' '
+	NR==1 {
+    		for (i=1; i<=NF; i++) {
+        		f[$i] = i
+    		}
+	}\
+	{ print $(f["fastq_ftp"])}
+	' ../filereport_read_run_*_tsv.txt | tail -n +2 -q | awk -F ';' '
+		{for(i=1;i<=NF;i++) print $i}
+	' > ../download_links.txt
+	curl --retry 999 --retry-max-time 0 --retry-all-errors -C - -Z --parallel-max $ndl --remote-name-all $(cat ../download_links.txt)
+fi
+
+
+# Check Quality of fastq using fastqc
+echo "Quality Check b4 Pre-Processing"
+date
+
+fastqc \
+	-t $thr\
+	-o ../fastqc\
+	*.fastq.gz
+
+multiqc	-o ../fastqc/ ../fastqc/
+
+echo "Pre-processing"
+date
+
+if [ `ls *_1.fastq.gz 2>/dev/null | wc -l` -gt 0 ] ; then
+    for i in $(ls *.fastq.gz | sed -e 's/_1.fastq.gz//' -e 's/_2.fastq.gz//' | sort -u); do
+		fastp -w $thr -r -l 36 -c --detect_adapter_for_pe -i ${i}_1.fastq.gz -I ${i}_2.fastq.gz -o ../fastqp/${i}_1.fastq.gz -O ../fastqp/${i}_2.fastq.gz -j ../fastp/${i}_fastp.json -h ../fastp/${i}_fastp.html
+		
+		rm ${i}_1.fastq.gz ${i}_2.fastq.gz
+	done
+else
+	for i in $(ls *.fastq.gz | sed -e 's/.fastq.gz//' | sort -u);do
+		fastp -w $thr -r - l 36 -i ${i}.fastq.gz -o ../fastqp/${i}.fastq.gz -j ../fastp/${i}_fastp.json -h ../fastp/${i}_fastp.html
+
+		rm ${i}.fastq.gz
+	done
+fi
+
+cd ../fastqp
+
+echo "Quality Check after Pre-Processing"
+date
+
+fastqc \
+	-t $thr\
+	-o ../fastp\
+	*.fastq.gz
+
+
+multiqc	-o ../fastp/ ../fastp/
+
+# Mapping fastq using STAR-aligner
 echo "Mapping Started"
 date
 
+STAR --genomeLoad LoadAndExit --genomeDir $path$org$STAR
+
+## For paired-end reads
 if [ `ls *_1.fastq.gz 2>/dev/null | wc -l` -gt 0 ] ; then
 
         for i in $(ls *.fastq.gz | sed -e 's/_1.fastq.gz//' -e 's/_2.fastq.gz//' | sort -u); do
@@ -34,24 +105,27 @@ if [ `ls *_1.fastq.gz 2>/dev/null | wc -l` -gt 0 ] ; then
         STAR \
 	--runThreadN $thr\
 	--genomeDir $path$org$STAR\
+	--genomeLoad LoadAndKeep\
 	--readFilesCommand zcat\
 	--readFilesIn ${i}_1.fastq.gz ${i}_2.fastq.gz\
 	--outSAMattributes All\
 	--outSAMtype BAM Unsorted\
 	--quantMode GeneCounts\
 	--outFileNamePrefix ../BAM/${i}_
+	
+	rm ${i}_1.fastq.gz ${i}_2.fastq.gz
         
 done
 
 else
+## For normal reads
 
-       for i in $(ls *.fastq.gz | sed -e 's/.fastq.gz//' | sort -u)
-
-do
+       for i in $(ls *.fastq.gz | sed -e 's/.fastq.gz//' | sort -u);do
 
 	STAR \
-	--runThreadN 112\
+	--runThreadN $thr\
 	--genomeDir $path$org$STAR\
+	--genomeLoad LoadAndKeep\
 	--readFilesCommand zcat\
 	--readFilesIn ${i}.fastq.gz\
 	--outSAMattributes All\
@@ -59,9 +133,13 @@ do
 	--quantMode GeneCounts\
 	--outFileNamePrefix ../BAM/${i}_
 
+	rm ${i}.fastq.gz
+
 done
 
 fi
+
+STAR --genomeLoad Remove --genomeDir $path$org$STAR
 
 date
 echo "Mapping Done"
