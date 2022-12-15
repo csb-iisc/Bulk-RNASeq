@@ -201,6 +201,5 @@ cd ../htseq/
 
 GenLen=$path$org/$org'_GeneLength_kb.tsv'
 ../process-count.py $GenLen
-rm *.bam_htseq.txt
 
 echo "RNASeq pipeline complete"
