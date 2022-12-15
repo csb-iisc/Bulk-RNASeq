@@ -190,10 +190,10 @@ GTF=$path$org$gtf
 echo "HTSeq Started"
 
 date
-parallel -j $thr 'htseq-count -s {1} {2} {3} > {4}{2}_htseq.txt' :::  $OUTPUT ::: *.bam ::: $GTF ::: $DIR
-date
+htseq-count -n $thr -s $OUTPUT -c ../htseq/RawCounts_htseq.tsv --with-header *.bam $GTF
 
 echo "HTSeq Done"
+date
 
 # Preparing htseq files for further use
 
