@@ -1,17 +1,5 @@
 #!/bin/bash
 
-############################################################################################
-############################################################################################
-##   A complete automated RNA-Seq pipeline                                                ##
-##   Author : Susmita Mandal                                                              ##
-##   Date: 13/10/2020                                                                     ##
-##   Make three folders fastq, BAM and htseq                                              ##
-##   Download the fastq files in the fastq folder and run this script                     ##
-##   When prompted Organism: type hg38 or mm10 and ENTER                                  ##
-##   When prompted Cluster threads: type the no of cores available to you. eg. 10,20,40   ##
-############################################################################################
-############################################################################################
-
 # Input parameters
 path='/mnt/csb-seq/'
 STAR='_STARIndexed'
@@ -200,6 +188,6 @@ date
 cd ../htseq/
 
 GenLen=$path$org/$org'_GeneLength_kb.tsv'
-../process-count.py $GenLen
+../process-count.py -f $GenLen
 
 echo "RNASeq pipeline complete"
