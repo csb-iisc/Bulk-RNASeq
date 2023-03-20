@@ -144,7 +144,7 @@ for i in $(ls *.bam | sed -e 's/_Aligned.out.bam//' | sort -u)
 do
 
 	samtools sort\
-	-@ thr\
+	-@ $thr\
 	-n\
 	${i}_Aligned.out.bam\
 	-o ${i}.bam
