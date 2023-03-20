@@ -3,7 +3,7 @@
 # Input parameters
 path='/mnt/csb-seq/'
 STAR='_STARIndexed'
-org='mm10'
+org='hg38'
 thr=14
 ndl=10
 
@@ -139,7 +139,7 @@ cd ../BAM/
 date
 echo "Sorting Started"
 
-for i in $(ls *.bam | sed -e 's/_Aligned.out.bam//' | sort -u)
+for i in $(ls *_Aligned.out.bam | sed -e 's/_Aligned.out.bam//' | sort -u)
 
 do
 
