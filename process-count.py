@@ -8,9 +8,10 @@ parser.add_argument('-f', help='Gene Length File')
 args = parser.parse_args()
 
 # Read gene lengths
-gAnnot = pd.read_csv(args.f,delimiter='\t',names=['GeneID','Len'],index_col=0)
+gAnnot = pd.read_csv(args.f,delimiter='\t',names=['GeneID','Gene','Len'],index_col=0)
 # Read raw counts
 df=pd.read_csv('RawCounts_htseq.tsv',delimiter='\t',index_col=0)
+# Remove last 5 lines
 n=5
 df.drop(df.tail(n).index,inplace=True)
 
@@ -20,5 +21,7 @@ if (len(df)!=len(gAnnot)):
 df = df.divide(gAnnot['Len'],axis='rows')
 df = df.divide(df.sum(),axis='columns') * 1e6
 df = np.log2(df+1)
+# Add Gene Names
+df = pd.merge(gAnnot['Gene'],df,left_index=True,right_index=True)
 # Save TPM counts
 df.to_csv('TPMCounts.tsv',sep='\t')
