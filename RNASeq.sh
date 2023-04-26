@@ -1,21 +1,9 @@
 #!/bin/bash
 
-############################################################################################
-############################################################################################
-##   A complete automated RNA-Seq pipeline                                                ##
-##   Author : Susmita Mandal                                                              ##
-##   Date: 13/10/2020                                                                     ##
-##   Make three folders fastq, BAM and htseq                                              ##
-##   Download the fastq files in the fastq folder and run this script                     ##
-##   When prompted Organism: type hg38 or mm10 and ENTER                                  ##
-##   When prompted Cluster threads: type the no of cores available to you. eg. 10,20,40   ##
-############################################################################################
-############################################################################################
-
 # Input parameters
 path='/mnt/csb-seq/'
 STAR='_STARIndexed'
-org='mm10'
+org='hg38'
 thr=14
 ndl=10
 
@@ -151,12 +139,12 @@ cd ../BAM/
 date
 echo "Sorting Started"
 
-for i in $(ls *.bam | sed -e 's/_Aligned.out.bam//' | sort -u)
+for i in $(ls *_Aligned.out.bam | sed -e 's/_Aligned.out.bam//' | sort -u)
 
 do
 
 	samtools sort\
-	-@ thr\
+	-@ $thr\
 	-n\
 	${i}_Aligned.out.bam\
 	-o ${i}.bam
@@ -190,30 +178,16 @@ GTF=$path$org$gtf
 echo "HTSeq Started"
 
 date
-parallel -j $thr 'htseq-count --additional-attr=gene_name -s {1} -f bam {2} {3} > {4}{2}_htseq.txt' :::  $OUTPUT ::: *.bam ::: $GTF ::: $DIR
-date
+htseq-count -n $thr -s $OUTPUT -c ../htseq/RawCounts_htseq.tsv --with-header *.bam $GTF
 
 echo "HTSeq Done"
+date
 
 # Preparing htseq files for further use
 
 cd ../htseq/
 
-for i in $(ls *.txt | sed -e 's/.bam_htseq.txt//' | sort -u)
-
-do
-	head -n -5 ${i}.bam_htseq.txt > ${i}.htseq.txt
-	sed -i 1i"GeneID\tGeneName\t${i%.htseq.txt}" ${i}.htseq.txt
-done
-
-tmp=$(ls *.htseq.txt | head -n1 | sed -e 's/.htseq.txt//')
-cut -f1,2 $tmp.htseq.txt > tmp1.txt
-
-paste *.htseq.txt | awk '{ for (i=3;i<=NF;i+=3) {printf "%s ",$i} ;print ""}' | sed 's/ /\t/g' > tmp2.txt
-
-dir=$(dirname $PWD | sed 's:.*/::')
-paste tmp1.txt tmp2.txt > $dir.htseq.txt
-
-sed -e s/GeneID//g $dir.htseq.txt | sed -e s/GeneName//g > ${dir}_RawCounts.tsv
+GenLen=$path$org/$org'_GeneLength_kb.tsv'
+../process-count.py -f $GenLen
 
 echo "RNASeq pipeline complete"
