@@ -4,7 +4,7 @@
 path='/mnt/csb-seq/'
 STAR='_STARIndexed'
 org='hg38'
-thr=14
+thr=100
 ndl=10
 
 # exit when any command fails
