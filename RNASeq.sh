@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Input parameters
-path='/mnt/csb-seq/'
+genome_path='/mnt/nvme_sequencing/RNASeq/'
 STAR='_STARIndexed'
 org='hg38'
 thr=100
@@ -83,7 +83,7 @@ multiqc	-o ../fastp/ ../fastp/
 echo "Mapping Started"
 date
 
-STAR --genomeLoad LoadAndExit --genomeDir $path$org$STAR
+STAR --genomeLoad LoadAndExit --genomeDir $genome_path$org$STAR
 
 ## For paired-end reads
 if [ `ls *_1.fastq.gz 2>/dev/null | wc -l` -gt 0 ] ; then
@@ -92,7 +92,7 @@ if [ `ls *_1.fastq.gz 2>/dev/null | wc -l` -gt 0 ] ; then
 
         STAR \
 	--runThreadN $thr\
-	--genomeDir $path$org$STAR\
+	--genomeDir $genome_path$org$STAR\
 	--genomeLoad LoadAndKeep\
 	--readFilesCommand zcat\
 	--readFilesIn ${i}_1.fastq.gz ${i}_2.fastq.gz\
@@ -112,7 +112,7 @@ else
 
 	STAR \
 	--runThreadN $thr\
-	--genomeDir $path$org$STAR\
+	--genomeDir $genome_path$org$STAR\
 	--genomeLoad LoadAndKeep\
 	--readFilesCommand zcat\
 	--readFilesIn ${i}.fastq.gz\
@@ -127,7 +127,7 @@ done
 
 fi
 
-STAR --genomeLoad Remove --genomeDir $path$org$STAR
+STAR --genomeLoad Remove --genomeDir $genome_path$org$STAR
 
 date
 echo "Mapping Done"
@@ -173,7 +173,7 @@ done)
 
 echo "Stranded-ness : ${OUTPUT}"
 
-GTF=$path$org$gtf
+GTF=$genome_path$org$gtf
 
 echo "HTSeq Started"
 
@@ -187,7 +187,7 @@ date
 
 cd ../htseq/
 
-GenLen=$path$org/$org'_GeneLength_kb.tsv'
+GenLen=$genome_path$org/$org'_GeneLength_kb.tsv'
 ../process-count.py -f $GenLen
 
 echo "RNASeq pipeline complete"

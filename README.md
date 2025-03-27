@@ -1,18 +1,18 @@
 # Bulk-RNASeq
-A repository for the analysis script for bulk RNA Sequencing data
+A repository for the script to process raw fastq to counts/TPM for bulk RNA Sequencing data.
 
 ## Requirements (with tested versions)
-- curl == 7.81
-- fastqc == 0.11.9
-- fastp == 0.20.1
-- STAR == 2.7.3a
-- python == 3.10.6
-    - multiqc == 1.14
-    - htseq == 2.0.2
+- curl == 8.5.0
+- fastqc == 0.12.1
+- fastp == 0.23.4
+- STAR == 2.7.11b
+- python == 3.12.3
+    - multiqc == 1.18
+    - htseq == 2.0.5
 
 ## How to use
 1. Clone this repository/copy script from `~/Scripts/Bulk-RNASeq/`
-2. Edit the number of threads and organism in the script (and the path if you aren't using the sequencing cluster)
+2. Edit the number of threads and organism in the script (and the genome_path if you aren't using the sequencing cluster)
 3. If you have the fastq files, else follow step 4
     - Place them in the fastq folder
     - Ensure that the paired end naming convention similar to the following, you might have to edit the script otherwise: 
@@ -27,3 +27,6 @@ A repository for the analysis script for bulk RNA Sequencing data
 ```
 6. Wait
 7. Profit
+
+## Generating Genome Index
+Checkout the `GenomeGen` branch and follow instructions there.
