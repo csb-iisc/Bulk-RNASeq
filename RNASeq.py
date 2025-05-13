@@ -33,16 +33,16 @@ def main():
     mkdirs(args.fastq_dir, args.fastqc_dir, args.fastp_dir, args.fastqp_dir, args.bam_dir, args.summary_dir)
     if args.filereport:
         download_fastq(args.filereport, args.num_downloads, args.fastq_dir)
-    # fastqc(args.fastq_dir, args.fastqc_dir, thr)
-    # df = file_pair(args.fastq_dir)
-    # trimming(df, args.fastq_dir, args.fastp_dir, args.fastqp_dir, thr, args.preserve_fastq)
-    # fastq_dir = args.fastqp_dir
-    # fastqc(fastq_dir, args.fastp_dir, thr)
-    # align(df, fastq_dir, args.bam_dir, thr, args.genome_dir, args.org, args.genome, args.preserve_fastq)
-    # sort_bam(args.bam_dir, thr)
-    # bam_to_counts(args.bam_dir, args.counts_dir, thr, args.gtf_file, args.org, args.genome, args.preserve_bam)
+    fastqc(args.fastq_dir, args.fastqc_dir, thr)
+    df = file_pair(args.fastq_dir)
+    trimming(df, args.fastq_dir, args.fastp_dir, args.fastqp_dir, thr, args.preserve_fastq)
+    fastq_dir = args.fastqp_dir
+    fastqc(fastq_dir, args.fastp_dir, thr)
+    align(df, fastq_dir, args.bam_dir, thr, args.genome_dir, args.org, args.genome, args.preserve_fastq)
+    sort_bam(args.bam_dir, thr)
+    bam_to_counts(args.bam_dir, args.counts_dir, thr, args.gtf_file, args.org, args.genome, args.preserve_bam)
     counts_to_tpm(args.counts_dir, args.genome_length, args.org, args.genome)
-    # multiqc(args.summary_dir, args.fastqc_dir, args.fastp_dir, args.bam_dir, args.counts_dir)
+    multiqc(args.summary_dir, args.fastqc_dir, args.fastp_dir, args.bam_dir, args.counts_dir)
 
 def check_programs():
     # Check if the programs are installed
@@ -117,8 +117,8 @@ def trimming(df, fastq_dir, fastp_dir, fastqp_dir, thr, preserve_fastq):
         '-r',
         '-l', '36',
         ]
-    trimming_single(df[~df['paired']], fastp_command, fastq_dir, fastp_dir, preserve_fastq)
-    trimming_paired(df[df['paired']], fastp_command, fastq_dir, fastp_dir, preserve_fastq)
+    trimming_single(df[~df['paired']], fastp_command, fastq_dir, fastp_dir, fastqp_dir, preserve_fastq)
+    trimming_paired(df[df['paired']], fastp_command, fastq_dir, fastp_dir, fastqp_dir, preserve_fastq)
 
 def trimming_single(df, fastp_command, fastq_dir, fastp_dir, fastqp_dir, preserve_fastq):
     for sample_name, fastq_files in df.iterrows():
