@@ -148,7 +148,7 @@ STAR --runThreadN ${thr} \
     --sjdbGTFfile ${gtf_filtered} \
     --sjdbOverhang 99 
 
-cp "${gtf_filtered}" "${genome_path}/annotation.gtf"
+cp "${gtf_filtered}" "${genome_path}/${org}_STARIndexed/annotation.gtf"
 
 rm -f "${gtf_modified}" "${fasta_modified}" "${gtf_filtered}" "${genome_path}/${org}-${genome_release}/gene_allowlist"
 echo "Reference genome for $org with Genome $genome-release-$genome_release and GENCODE-v$gencode_release has been created"
